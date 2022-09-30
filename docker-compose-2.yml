@@ -1,0 +1,54 @@
+version: '3.7'
+services:
+  db:
+    image: "postgres:alpine"
+    container_name: sample_db_postgres
+    environment:
+      - POSTGRES_PASSWORD=P@ssw0rd
+      - POSTGRES_DB=db_enigma
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+
+  # Backend
+  todo-be:
+    build:
+      context: todo-be
+      dockerfile: Dockerfile
+    container_name: todo-be
+    volumes:
+      - ./todo-be:/src
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=sample_db_postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=P@ssw0rd
+      - DB_NAME=db_enigma
+      - API_PORT=8081
+    depends_on:
+      - db
+    networks:
+      - backend
+      - frontend
+
+  todo-fe:
+    stdin_open: true
+    build:
+      context: todo-fe
+    volumes:
+      - ./todo-fe/src
+    container_name: todo-fe
+    ports:
+      - "3000:80"
+    depends_on:
+      - todo-be
+    networks:
+      - frontend
+
+# Networks
+networks:
+  backend:
+  frontend:

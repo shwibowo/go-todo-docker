@@ -1,0 +1,51 @@
+version: '3.7'
+services:
+  db:
+    image: "postgres:alpine"
+    container_name: enigma_db
+    environment:
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=enigma_todo
+      - POSTGRES_USER=enigma
+    volumes:
+      - /home/enigma/data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    networks:
+      - todo-network
+
+  # Backend
+  todo-be:
+    build:
+      context: todo-be
+      dockerfile: Dockerfile
+    container_name: go-app
+    expose:
+      - "8888"
+    environment:
+      - DB_HOST=enigma_db
+      - DB_PORT=5432
+      - DB_USER=enigma
+      - DB_PASSWORD=12345
+      - DB_NAME=enigma_todo
+      - API_PORT=8888
+    depends_on:
+      - db
+    networks:
+      - todo-network
+
+  todo-fe:
+    build:
+      context: todo-fe
+      dockerfile: Dockerfile
+    container_name: todo-app
+    ports:
+      - "80:80"
+    depends_on:
+      - todo-be
+    networks:
+      - todo-network
+
+# Networks
+networks:
+    todo-network:
